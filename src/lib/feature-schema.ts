@@ -35,9 +35,43 @@ export const memberSchema = z.object({
     .trim()
     .min(1, "Tên thành viên là bắt buộc")
     .max(120, "Tên thành viên tối đa 120 ký tự"),
+  password: z
+    .string()
+    .trim()
+    .min(6, "Password tối thiểu 6 ký tự")
+    .max(120, "Password tối đa 120 ký tự"),
 });
 
 export type MemberFormValues = z.infer<typeof memberSchema>;
+
+export const updateMemberSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Tên thành viên là bắt buộc")
+    .max(120, "Tên thành viên tối đa 120 ký tự"),
+  password: z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || value.length >= 6, {
+      message: "Password tối thiểu 6 ký tự",
+    })
+    .max(120, "Password tối đa 120 ký tự")
+    .optional(),
+});
+
+export const loginSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, "Tên là bắt buộc")
+    .max(120, "Tên tối đa 120 ký tự"),
+  password: z
+    .string()
+    .trim()
+    .min(1, "Password là bắt buộc")
+    .max(120, "Password tối đa 120 ký tự"),
+});
 
 export function parseReleaseDate(value: string) {
   return new Date(`${value}T00:00:00.000Z`);

@@ -11,5 +11,6 @@ export type FeatureItem = {
 
 export type MemberItem = {
   id: string;
+  hasPassword?: boolean;
   name: string;
 };

@@ -4,9 +4,19 @@ import { revalidatePath } from "next/cache";
 
 import {
   featureSchema,
+  loginSchema,
   memberSchema,
   parseReleaseDate,
+  updateMemberSchema,
 } from "@/lib/feature-schema";
+import {
+  clearSession,
+  getCurrentUser,
+  hasAdminAccount,
+  hashPassword,
+  setSession,
+  verifyPassword,
+} from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export type ActionState = {
@@ -54,7 +64,35 @@ async function assertMemberExists(assignee: string) {
   return Boolean(member);
 }
 
+async function canManageMembersForSetup() {
+  const [currentUser, adminExists] = await Promise.all([
+    getCurrentUser(),
+    hasAdminAccount(),
+  ]);
+
+  return Boolean(currentUser) || !adminExists;
+}
+
+async function assertAdminAction() {
+  const currentUser = await getCurrentUser();
+
+  if (!currentUser) {
+    return {
+      ok: false as const,
+      message: "Bạn cần đăng nhập admin để thực hiện thao tác này.",
+    };
+  }
+
+  return { ok: true as const };
+}
+
 export async function createFeature(formData: unknown): Promise<ActionState> {
+  const authorized = await assertAdminAction();
+
+  if (!authorized.ok) {
+    return authorized;
+  }
+
   const normalized = normalizeData(formData);
 
   if (!normalized.ok) {
@@ -94,6 +132,12 @@ export async function updateFeature(
   id: string,
   formData: unknown,
 ): Promise<ActionState> {
+  const authorized = await assertAdminAction();
+
+  if (!authorized.ok) {
+    return authorized;
+  }
+
   const normalized = normalizeData(formData);
 
   if (!normalized.ok) {
@@ -122,6 +166,7 @@ export async function updateFeature(
       data: normalized.data,
     });
     revalidatePath("/");
+    revalidatePath(`/features/${id}`);
   } catch (error) {
     return {
       ok: false,
@@ -133,6 +178,12 @@ export async function updateFeature(
 }
 
 export async function deleteFeature(id: string): Promise<ActionState> {
+  const authorized = await assertAdminAction();
+
+  if (!authorized.ok) {
+    return authorized;
+  }
+
   try {
     await prisma.feature.delete({ where: { id } });
     revalidatePath("/");
@@ -147,6 +198,13 @@ export async function deleteFeature(id: string): Promise<ActionState> {
 }
 
 export async function createMember(formData: unknown): Promise<ActionState> {
+  if (!(await canManageMembersForSetup())) {
+    return {
+      ok: false,
+      message: "Bạn cần đăng nhập admin để quản lý thành viên.",
+    };
+  }
+
   const parsed = memberSchema.safeParse(formData);
 
   if (!parsed.success) {
@@ -159,7 +217,10 @@ export async function createMember(formData: unknown): Promise<ActionState> {
 
   try {
     await prisma.member.create({
-      data: { name: parsed.data.name },
+      data: {
+        name: parsed.data.name,
+        passwordHash: await hashPassword(parsed.data.password),
+      },
     });
     revalidatePath("/");
   } catch {
@@ -177,7 +238,24 @@ export async function updateMember(
   id: string,
   formData: unknown,
 ): Promise<ActionState> {
-  const parsed = memberSchema.safeParse(formData);
+  const currentUser = await getCurrentUser();
+  const adminExists = await hasAdminAccount();
+
+  if (!currentUser && adminExists) {
+    return {
+      ok: false,
+      message: "Bạn cần đăng nhập admin để quản lý thành viên.",
+    };
+  }
+
+  if (currentUser && currentUser.id !== id) {
+    return {
+      ok: false,
+      message: "Bạn chỉ có quyền sửa tài khoản của chính mình.",
+    };
+  }
+
+  const parsed = updateMemberSchema.safeParse(formData);
 
   if (!parsed.success) {
     return {
@@ -200,10 +278,17 @@ export async function updateMember(
       };
     }
 
+    const memberData = {
+      name: parsed.data.name,
+      ...(parsed.data.password
+        ? { passwordHash: await hashPassword(parsed.data.password) }
+        : {}),
+    };
+
     await prisma.$transaction([
       prisma.member.update({
         where: { id },
-        data: { name: parsed.data.name },
+        data: memberData,
       }),
       prisma.feature.updateMany({
         where: { assignee: currentMember.name },
@@ -223,6 +308,12 @@ export async function updateMember(
 }
 
 export async function deleteMember(id: string): Promise<ActionState> {
+  const authorized = await assertAdminAction();
+
+  if (!authorized.ok) {
+    return authorized;
+  }
+
   try {
     await prisma.member.delete({ where: { id } });
     revalidatePath("/");
@@ -234,4 +325,43 @@ export async function deleteMember(id: string): Promise<ActionState> {
   }
 
   return { ok: true, message: "Đã xoá thành viên." };
+}
+
+export async function login(formData: unknown): Promise<ActionState> {
+  const parsed = loginSchema.safeParse(formData);
+
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Vui lòng kiểm tra lại thông tin đăng nhập.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+
+  const member = await prisma.member.findUnique({
+    where: { name: parsed.data.name },
+    select: { id: true, name: true, passwordHash: true },
+  });
+
+  if (
+    !member?.passwordHash ||
+    !(await verifyPassword(parsed.data.password, member.passwordHash))
+  ) {
+    return {
+      ok: false,
+      message: "Tên hoặc password không đúng.",
+    };
+  }
+
+  await setSession({ id: member.id, name: member.name, role: "admin" });
+  revalidatePath("/");
+
+  return { ok: true, message: "Đã đăng nhập." };
+}
+
+export async function logout(): Promise<ActionState> {
+  await clearSession();
+  revalidatePath("/");
+
+  return { ok: true, message: "Đã đăng xuất." };
 }

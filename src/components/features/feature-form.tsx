@@ -88,20 +88,26 @@ export function FeatureForm({
     });
   }
 
-  return (
-    <form className="grid gap-5" onSubmit={handleSubmit(onSubmit)}>
-      <div className="grid gap-2">
-        <RequiredLabel htmlFor="ticketName">Tên ticket</RequiredLabel>
-        <Input
-          id="ticketName"
-          placeholder="VD: [OROCA-123] Ra mắt màn hình quản lý đơn hàng"
-          {...register("ticketName")}
-        />
-        <FieldMessage message={errors.ticketName?.message} />
-      </div>
+  const hasTicketRowError = Boolean(errors.ticketName || errors.ticket);
+  const hasReleaseRowError = Boolean(errors.assignee || errors.releaseDate);
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="grid gap-2">
+  return (
+    <form className="grid gap-3" onSubmit={handleSubmit(onSubmit)}>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5">
+          <RequiredLabel htmlFor="ticketName">Tên ticket</RequiredLabel>
+          <Input
+            id="ticketName"
+            placeholder="VD: [OROCA-123] Ra mắt màn hình quản lý đơn hàng"
+            {...register("ticketName")}
+          />
+          <FieldMessage
+            message={errors.ticketName?.message}
+            show={hasTicketRowError}
+          />
+        </div>
+
+        <div className="grid gap-1.5">
           <RequiredLabel htmlFor="ticket">Link Jira</RequiredLabel>
           <Input
             id="ticket"
@@ -109,10 +115,15 @@ export function FeatureForm({
             type="url"
             {...register("ticket")}
           />
-          <FieldMessage message={errors.ticket?.message} />
+          <FieldMessage
+            message={errors.ticket?.message}
+            show={hasTicketRowError}
+          />
         </div>
+      </div>
 
-        <div className="grid gap-2">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-1.5">
           <RequiredLabel htmlFor="assignee">Người thực hiện</RequiredLabel>
           <select
             className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-950 shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
@@ -126,29 +137,35 @@ export function FeatureForm({
               </option>
             ))}
           </select>
-          <FieldMessage message={errors.assignee?.message} />
+          <FieldMessage
+            message={errors.assignee?.message}
+            show={hasReleaseRowError}
+          />
           {members.length === 0 ? (
             <p className="text-sm text-amber-700">
               Chưa có thành viên. Thêm thành viên trước khi tạo feature.
             </p>
           ) : null}
         </div>
+
+        <div className="grid gap-1.5">
+          <RequiredLabel className="flex items-center gap-2" htmlFor="releaseDate">
+            <CalendarDays className="h-4 w-4" />
+            Ngày release
+          </RequiredLabel>
+          <Input id="releaseDate" type="date" {...register("releaseDate")} />
+          <FieldMessage
+            message={errors.releaseDate?.message}
+            show={hasReleaseRowError}
+          />
+        </div>
       </div>
 
-      <div className="grid gap-2">
-        <RequiredLabel className="flex items-center gap-2" htmlFor="releaseDate">
-          <CalendarDays className="h-4 w-4" />
-          Ngày release
-        </RequiredLabel>
-        <Input id="releaseDate" type="date" {...register("releaseDate")} />
-        <FieldMessage message={errors.releaseDate?.message} />
-      </div>
-
-      <div className="grid gap-2">
+      <div className="grid gap-1.5">
         <RequiredLabel htmlFor="userGuide">User guide</RequiredLabel>
         <Textarea
           id="userGuide"
-          className="min-h-48"
+          className="min-h-[28rem] py-2 sm:min-h-[32rem]"
           placeholder="Hỗ trợ Markdown: **in đậm**, danh sách, tiêu đề..."
           {...register("userGuide")}
         />
@@ -186,10 +203,29 @@ function RequiredLabel({
   );
 }
 
-function FieldMessage({ message }: { message?: string }) {
+function FieldMessage({
+  message,
+  show,
+}: {
+  message?: string;
+  show?: boolean;
+}) {
+  if (!message && !show) {
+    return null;
+  }
+
   return (
-    <p className="min-h-5 text-sm leading-5 text-rose-600">
-      {message ? message : <span aria-hidden="true">&nbsp;</span>}
-    </p>
+    <div
+      aria-live="polite"
+      className="min-h-4 text-xs leading-4 text-rose-600"
+    >
+      {message ? (
+        message
+      ) : (
+        <span aria-hidden="true" className="invisible">
+          .
+        </span>
+      )}
+    </div>
   );
 }

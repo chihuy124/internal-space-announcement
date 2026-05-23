@@ -1,5 +1,6 @@
 import { ClipboardList, Database, Rocket } from "lucide-react";
 
+import { AuthMenu } from "@/components/features/auth-menu";
 import { FeatureCard } from "@/components/features/feature-card";
 import { FeatureDialog } from "@/components/features/feature-dialog";
 import { MemberManager } from "@/components/features/member-manager";
@@ -7,6 +8,7 @@ import { Pagination } from "@/components/features/pagination";
 import { SearchBar } from "@/components/features/search-bar";
 import type { FeatureItem, MemberItem } from "@/components/features/types";
 import { Card, CardContent } from "@/components/ui/card";
+import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 const PAGE_SIZE = 10;
@@ -72,7 +74,7 @@ async function getFeatures(
       prisma.feature.count({ where }),
       prisma.member.findMany({
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-        select: { id: true, name: true },
+        select: { id: true, name: true, passwordHash: true },
       }),
     ]);
 
@@ -89,13 +91,16 @@ async function getFeatures(
         updatedAt: feature.updatedAt.toISOString(),
       })),
       members: members.map<MemberItem>((member) => ({
+        hasPassword: Boolean(member.passwordHash),
         id: member.id,
         name: member.name,
       })),
       total,
+      adminExists: members.some((member) => Boolean(member.passwordHash)),
     };
   } catch {
     return {
+      adminExists: false,
       dbReady: false,
       features: [],
       members: [],
@@ -117,13 +122,17 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
     releaseFrom,
     releaseTo,
   );
+  const currentUser = dbReady ? await getCurrentUser() : null;
+  const canManage = Boolean(currentUser);
+  const adminExists = members.some((member) => member.hasPassword);
+  const canSetupFirstAdmin = dbReady && !adminExists;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
     <main className="min-h-dvh bg-[#fbfaf8] text-[#191919]">
       <section className="bg-[#101628] text-white">
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
             <div className="max-w-3xl space-y-3">
               <div className="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/10 px-3 py-1 text-sm font-medium text-white">
                 <Rocket className="h-4 w-4" />
@@ -139,9 +148,31 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
                 </p>
               </div>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <MemberManager members={members} />
-              <FeatureDialog members={members} mode="create" />
+            <div className="w-full rounded-xl border border-white/10 bg-white/[0.06] p-3 shadow-[0_20px_60px_-35px_rgba(0,0,0,0.8)] backdrop-blur lg:w-auto lg:min-w-[25rem]">
+              <div className="mb-3 flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-white/45">
+                    Quyền truy cập
+                  </p>
+                  <p className="text-sm font-semibold text-white">
+                    {canManage ? "Admin" : "Viewer"}
+                  </p>
+                </div>
+                <AuthMenu currentUserName={currentUser?.name} />
+              </div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+                {canManage || canSetupFirstAdmin ? (
+                <MemberManager
+                  canDelete={canManage}
+                  currentUserId={currentUser?.id}
+                  members={members}
+                  setupMode={canSetupFirstAdmin}
+                />
+                ) : null}
+                {canManage ? (
+                  <FeatureDialog members={members} mode="create" />
+                ) : null}
+              </div>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -206,7 +237,12 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
         {features.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
-              <FeatureCard feature={feature} key={feature.id} members={members} />
+              <FeatureCard
+                canManage={canManage}
+                feature={feature}
+                key={feature.id}
+                members={members}
+              />
             ))}
           </div>
         ) : (

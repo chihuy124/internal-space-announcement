@@ -47,8 +47,8 @@ export function FeatureDialog({ mode, feature, members }: FeatureDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
+      <DialogContent className="gap-3 p-5 sm:max-w-3xl">
+        <DialogHeader className="gap-1">
           <DialogTitle>
             {isEdit ? "Sửa feature" : "Thêm feature mới"}
           </DialogTitle>
