@@ -35,8 +35,30 @@ npm run lint
 npm run build
 npm run db:generate
 npm run db:migrate
+npm run db:deploy
 npm run db:studio
 ```
+
+## Deploy Vercel
+
+1. Push project lên GitHub.
+2. Import repository trong Vercel.
+3. Thêm Environment Variable:
+
+```bash
+DATABASE_URL="postgresql://..."
+```
+
+Với Neon, nên dùng connection string có `sslmode=verify-full`.
+
+4. Deploy project.
+5. Chạy migration production:
+
+```bash
+npm run db:deploy
+```
+
+Lệnh này có thể chạy local với cùng `DATABASE_URL` production, hoặc chạy trong Vercel CLI/shell nếu bạn dùng workflow riêng.
 
 ## Notes
 
