@@ -1,0 +1,242 @@
+import { ClipboardList, Database, Rocket } from "lucide-react";
+
+import { FeatureCard } from "@/components/features/feature-card";
+import { FeatureDialog } from "@/components/features/feature-dialog";
+import { MemberManager } from "@/components/features/member-manager";
+import { Pagination } from "@/components/features/pagination";
+import { SearchBar } from "@/components/features/search-bar";
+import type { FeatureItem, MemberItem } from "@/components/features/types";
+import { Card, CardContent } from "@/components/ui/card";
+import { prisma } from "@/lib/prisma";
+
+const PAGE_SIZE = 10;
+
+type SearchParams = Promise<{
+  releaseFrom?: string;
+  releaseTo?: string;
+  search?: string;
+  page?: string;
+}>;
+
+function isDateParam(value: string) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function getFeatureWhere(search: string, releaseFrom: string, releaseTo: string) {
+  const clauses = [];
+
+  if (search) {
+    const query = { contains: search, mode: "insensitive" as const };
+
+    clauses.push({
+      OR: [{ ticket: query }, { ticketName: query }, { assignee: query }],
+    });
+  }
+
+  if (isDateParam(releaseFrom) || isDateParam(releaseTo)) {
+    const releaseDate = {
+      ...(isDateParam(releaseFrom)
+        ? { gte: new Date(`${releaseFrom}T00:00:00.000Z`) }
+        : {}),
+      ...(isDateParam(releaseTo)
+        ? { lte: new Date(`${releaseTo}T00:00:00.000Z`) }
+        : {}),
+    };
+
+    clauses.push({ releaseDate });
+  }
+
+  if (clauses.length === 0) {
+    return undefined;
+  }
+
+  return clauses.length === 1 ? clauses[0] : { AND: clauses };
+}
+
+async function getFeatures(
+  search: string,
+  page: number,
+  releaseFrom: string,
+  releaseTo: string,
+) {
+  try {
+    const where = getFeatureWhere(search, releaseFrom, releaseTo);
+
+    const [features, total, members] = await Promise.all([
+      prisma.feature.findMany({
+        where,
+        orderBy: [{ releaseDate: "desc" }, { updatedAt: "desc" }],
+        skip: (page - 1) * PAGE_SIZE,
+        take: PAGE_SIZE,
+      }),
+      prisma.feature.count({ where }),
+      prisma.member.findMany({
+        orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
+        select: { id: true, name: true },
+      }),
+    ]);
+
+    return {
+      dbReady: true,
+      features: features.map<FeatureItem>((feature) => ({
+        id: feature.id,
+        ticket: feature.ticket,
+        ticketName: feature.ticketName,
+        assignee: feature.assignee,
+        releaseDate: feature.releaseDate.toISOString(),
+        userGuide: feature.userGuide,
+        createdAt: feature.createdAt.toISOString(),
+        updatedAt: feature.updatedAt.toISOString(),
+      })),
+      members: members.map<MemberItem>((member) => ({
+        id: member.id,
+        name: member.name,
+      })),
+      total,
+    };
+  } catch {
+    return {
+      dbReady: false,
+      features: [],
+      members: [],
+      total: 0,
+    };
+  }
+}
+
+export default async function Home({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const search = params.search?.trim() ?? "";
+  const releaseFrom = params.releaseFrom ?? "";
+  const releaseTo = params.releaseTo ?? "";
+  const rawPage = Number(params.page ?? "1");
+  const page = Number.isFinite(rawPage) && rawPage > 0 ? Math.floor(rawPage) : 1;
+  const { dbReady, features, members, total } = await getFeatures(
+    search,
+    page,
+    releaseFrom,
+    releaseTo,
+  );
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  return (
+    <main className="min-h-dvh text-slate-950">
+      <section className="border-b border-white/70 bg-white/75 backdrop-blur">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl space-y-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50/80 px-3 py-1 text-sm font-medium text-sky-800 shadow-sm">
+                <Rocket className="h-4 w-4" />
+                Oroca internal release space
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
+                  Internal Space Announcement
+                </h1>
+                <p className="max-w-2xl text-base leading-7 text-slate-600">
+                  Quản lý các feature đã deploy của website chính, kèm ticket,
+                  người thực hiện, ngày release và user guide cho đội nội bộ.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <MemberManager members={members} />
+              <FeatureDialog members={members} mode="create" />
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Card className="border-white/80 bg-white/85 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+              <CardContent className="flex items-center gap-3 p-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                  <ClipboardList className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm text-slate-500">Tổng feature</p>
+                  <p className="text-xl font-semibold">{total}</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-white/80 bg-white/85 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+              <CardContent className="flex items-center gap-3 p-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                  <Database className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm text-slate-500">Database</p>
+                  <p className="text-xl font-semibold">
+                    {dbReady ? "PostgreSQL" : "Chưa kết nối"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-white/80 bg-white/85 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+              <CardContent className="flex items-center gap-3 p-4">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
+                  <Rocket className="h-5 w-5" />
+                </span>
+                <div>
+                  <p className="text-sm text-slate-500">Mỗi trang</p>
+                  <p className="text-xl font-semibold">{PAGE_SIZE} thẻ</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto flex min-h-[calc(100dvh-22rem)] w-full max-w-7xl flex-col gap-6 px-4 py-7 sm:px-6 lg:px-8">
+        <div className="rounded-xl border border-white/80 bg-white/80 p-3 shadow-[0_12px_35px_rgba(15,23,42,0.07)] backdrop-blur">
+          <SearchBar
+            defaultReleaseFrom={releaseFrom}
+            defaultReleaseTo={releaseTo}
+            defaultValue={search}
+          />
+        </div>
+
+        {!dbReady ? (
+          <Card className="border-amber-200 bg-amber-50">
+            <CardContent className="p-5 text-sm leading-6 text-amber-900">
+              Chưa kết nối được PostgreSQL. Cập nhật `DATABASE_URL`, chạy
+              `npx prisma migrate dev`, rồi tải lại trang để bắt đầu quản lý
+              feature.
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {features.length > 0 ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <FeatureCard feature={feature} key={feature.id} members={members} />
+            ))}
+          </div>
+        ) : (
+          <Card>
+            <CardContent className="flex min-h-64 flex-col items-center justify-center gap-3 p-8 text-center">
+              <ClipboardList className="h-10 w-10 text-slate-300" />
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold">
+                  {search ? "Không tìm thấy feature" : "Chưa có feature nào"}
+                </h2>
+                <p className="max-w-md text-sm leading-6 text-slate-500">
+                  {search
+                    ? "Thử đổi từ khoá tìm kiếm hoặc quay lại trang đầu."
+                    : "Thêm feature đầu tiên để ghi nhận ticket đã release và user guide cho đội nội bộ."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className="mt-auto pt-6">
+          <Pagination
+            page={Math.min(page, totalPages)}
+            releaseFrom={releaseFrom}
+            releaseTo={releaseTo}
+            search={search}
+            totalPages={totalPages}
+          />
+        </div>
+      </section>
+    </main>
+  );
+}
