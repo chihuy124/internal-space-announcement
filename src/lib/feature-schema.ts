@@ -7,6 +7,17 @@ const requiredText = (field: string) =>
     .min(1, `${field} là bắt buộc`)
     .max(200, `${field} tối đa 200 ký tự`);
 
+const usernameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1, "Username là bắt buộc")
+  .max(60, "Username tối đa 60 ký tự")
+  .regex(
+    /^[a-z0-9._-]+$/,
+    "Username chỉ gồm chữ thường, số, dấu chấm, gạch dưới hoặc gạch ngang",
+  );
+
 export const featureSchema = z.object({
   ticket: z
     .string()
@@ -35,6 +46,7 @@ export const memberSchema = z.object({
     .trim()
     .min(1, "Tên thành viên là bắt buộc")
     .max(120, "Tên thành viên tối đa 120 ký tự"),
+  username: usernameSchema,
   password: z
     .string()
     .trim()
@@ -50,6 +62,7 @@ export const updateMemberSchema = z.object({
     .trim()
     .min(1, "Tên thành viên là bắt buộc")
     .max(120, "Tên thành viên tối đa 120 ký tự"),
+  username: usernameSchema,
   password: z
     .string()
     .trim()
@@ -61,11 +74,7 @@ export const updateMemberSchema = z.object({
 });
 
 export const loginSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Tên là bắt buộc")
-    .max(120, "Tên tối đa 120 ký tự"),
+  username: usernameSchema,
   password: z
     .string()
     .trim()

@@ -220,6 +220,7 @@ export async function createMember(formData: unknown): Promise<ActionState> {
       data: {
         name: parsed.data.name,
         passwordHash: await hashPassword(parsed.data.password),
+        username: parsed.data.username,
       },
     });
     revalidatePath("/");
@@ -280,6 +281,7 @@ export async function updateMember(
 
     const memberData = {
       name: parsed.data.name,
+      username: parsed.data.username,
       ...(parsed.data.password
         ? { passwordHash: await hashPassword(parsed.data.password) }
         : {}),
@@ -339,7 +341,7 @@ export async function login(formData: unknown): Promise<ActionState> {
   }
 
   const member = await prisma.member.findUnique({
-    where: { name: parsed.data.name },
+    where: { username: parsed.data.username },
     select: { id: true, name: true, passwordHash: true },
   });
 

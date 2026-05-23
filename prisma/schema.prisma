@@ -31,6 +31,7 @@ model Feature {
 model Member {
   id           String   @id @default(cuid())
   name         String   @unique
+  username     String   @unique
   passwordHash String?
   sortOrder    Int      @default(0)
   createdAt    DateTime @default(now())
@@ -38,5 +39,6 @@ model Member {
 
   @@index([sortOrder])
   @@index([name])
+  @@index([username])
   @@index([passwordHash])
 }

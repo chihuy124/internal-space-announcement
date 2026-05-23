@@ -42,6 +42,7 @@ export function MemberManager({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [editingMember, setEditingMember] = useState<EditingMember>(null);
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -49,6 +50,7 @@ export function MemberManager({
   function resetForm() {
     setName("");
     setPassword("");
+    setUsername("");
     setEditingMember(null);
     setMessage("");
   }
@@ -68,7 +70,7 @@ export function MemberManager({
     setMessage("");
 
     startTransition(async () => {
-      const payload = { name, password };
+      const payload = { name, password, username };
       const result = editingMember
         ? await updateMember(editingMember.id, payload)
         : await createMember(payload);
@@ -81,6 +83,7 @@ export function MemberManager({
     setEditingMember(member);
     setName(member.name);
     setPassword("");
+    setUsername(member.username);
     setMessage("");
   }
 
@@ -139,6 +142,17 @@ export function MemberManager({
             />
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="adminUsername">Username đăng nhập</Label>
+            <Input
+              autoComplete="off"
+              id="adminUsername"
+              name="admin-username"
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="VD: huy.tran"
+              value={username}
+            />
+          </div>
+          <div className="grid gap-2">
             <Label htmlFor="adminAccessKey">
               Password {editingMember ? "(để trống nếu không đổi)" : ""}
             </Label>
@@ -187,7 +201,10 @@ export function MemberManager({
                   key={member.id}
                 >
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">
-                    {member.name}
+                    <span>{member.name}</span>
+                    <span className="ml-2 text-xs font-normal text-slate-500">
+                      @{member.username}
+                    </span>
                     {member.hasPassword ? (
                       <span className="ml-2 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-700">
                         admin

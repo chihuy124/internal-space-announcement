@@ -13,4 +13,5 @@ export type MemberItem = {
   id: string;
   hasPassword?: boolean;
   name: string;
+  username: string;
 };

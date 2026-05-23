@@ -24,8 +24,8 @@ type AuthMenuProps = {
 export function AuthMenu({ currentUserName }: AuthMenuProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
@@ -36,8 +36,8 @@ export function AuthMenu({ currentUserName }: AuthMenuProps) {
     }
 
     setMessage("");
-    setName("");
     setPassword("");
+    setUsername("");
     setOpen(false);
     router.refresh();
   }
@@ -47,7 +47,7 @@ export function AuthMenu({ currentUserName }: AuthMenuProps) {
     setMessage("");
 
     startTransition(async () => {
-      applyResult(await login({ name, password }));
+      applyResult(await login({ password, username }));
     });
   }
 
@@ -96,14 +96,16 @@ export function AuthMenu({ currentUserName }: AuthMenuProps) {
           </DialogDescription>
         </DialogHeader>
 
-        <form className="grid gap-3" onSubmit={submit}>
+        <form autoComplete="off" className="grid gap-3" onSubmit={submit}>
           <div className="grid gap-2">
-            <Label htmlFor="loginName">Tên</Label>
+            <Label htmlFor="loginUsername">Username</Label>
             <Input
-              id="loginName"
-              onChange={(event) => setName(event.target.value)}
-              placeholder="VD: Leo Nguyen"
-              value={name}
+              autoComplete="username"
+              id="loginUsername"
+              name="username"
+              onChange={(event) => setUsername(event.target.value)}
+              placeholder="VD: huy.tran"
+              value={username}
             />
           </div>
           <div className="grid gap-2">

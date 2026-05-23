@@ -74,7 +74,7 @@ async function getFeatures(
       prisma.feature.count({ where }),
       prisma.member.findMany({
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-        select: { id: true, name: true, passwordHash: true },
+        select: { id: true, name: true, passwordHash: true, username: true },
       }),
     ]);
 
@@ -94,6 +94,7 @@ async function getFeatures(
         hasPassword: Boolean(member.passwordHash),
         id: member.id,
         name: member.name,
+        username: member.username,
       })),
       total,
       adminExists: members.some((member) => Boolean(member.passwordHash)),
