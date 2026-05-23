@@ -99,8 +99,8 @@ export function DateRangePicker({ from, onChange, to }: DateRangePickerProps) {
     <div className="relative" ref={rootRef}>
       <button
         className={cn(
-          "flex h-10 w-full items-center justify-between gap-3 rounded-md border border-slate-200 bg-white px-3 text-left text-sm text-slate-700 shadow-sm transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 lg:w-80",
-          open && "border-violet-500 ring-2 ring-violet-200",
+          "flex h-10 w-full items-center justify-between gap-3 rounded-md border border-[#d9d9d6] bg-[#fbfaf8] px-3 text-left text-sm text-[#37352f] shadow-none transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7c3aed] lg:w-80",
+          open && "border-[#7c3aed] ring-2 ring-[#ddd6fe]",
         )}
         onClick={() => setOpen((value) => !value)}
         type="button"
@@ -112,9 +112,9 @@ export function DateRangePicker({ from, onChange, to }: DateRangePickerProps) {
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-12 z-40 w-[min(calc(100vw-2rem),27rem)] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xl">
+        <div className="absolute right-0 top-12 z-40 w-[min(calc(100vw-2rem),27rem)] overflow-hidden rounded-lg border border-[#d9d9d6] bg-white shadow-[0_16px_48px_-8px_rgba(15,15,15,0.16)]">
           <div className="grid md:grid-cols-[7.5rem_1fr]">
-            <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r">
+            <div className="border-b border-[#efede8] bg-[#fbfaf8] p-3 md:border-b-0 md:border-r">
               <p className="mb-3 text-center text-sm font-semibold leading-5 text-slate-900">
                 Ngày release
               </p>
@@ -126,7 +126,7 @@ export function DateRangePicker({ from, onChange, to }: DateRangePickerProps) {
             </div>
 
             <div>
-              <div className="border-b border-slate-200 px-3 py-2 text-sm font-medium text-slate-900">
+              <div className="border-b border-[#efede8] px-3 py-2 text-sm font-medium text-[#191919]">
                 {toDisplayDate(from)} ~ {toDisplayDate(to)}
               </div>
               <div className="p-3">
@@ -141,7 +141,7 @@ export function DateRangePicker({ from, onChange, to }: DateRangePickerProps) {
                   toDate={toDate}
                 />
               </div>
-              <div className="flex justify-end gap-2 border-t border-slate-200 p-3">
+              <div className="flex justify-end gap-2 border-t border-[#efede8] p-3">
                 <Button
                   onClick={() => {
                     onChange({ from: "", to: "" });
@@ -173,7 +173,7 @@ function PresetButton({
 }) {
   return (
     <button
-      className="rounded-md px-2 py-2 text-center text-sm text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-950 md:text-left"
+      className="rounded-md px-2 py-2 text-center text-sm text-[#6b6a67] transition-colors hover:bg-white hover:text-[#191919] md:text-left"
       onClick={onClick}
       type="button"
     >
@@ -251,10 +251,10 @@ function MonthCalendar({
           return (
             <button
               className={cn(
-                "h-8 rounded-md text-sm font-medium transition-colors hover:bg-violet-50",
+                "h-8 rounded-md text-sm font-medium transition-colors hover:bg-[#f4f1ff]",
                 !inCurrentMonth && "text-slate-300",
-                inRange && "bg-violet-50 text-violet-900",
-                (isStart || isEnd) && "bg-violet-500 text-white hover:bg-violet-600",
+                inRange && "bg-[#f4f1ff] text-[#4c1d95]",
+                (isStart || isEnd) && "bg-[#7c3aed] text-white hover:bg-[#6d28d9]",
               )}
               key={day.toISOString()}
               onClick={() => onPick(day)}
@@ -281,7 +281,7 @@ function CalendarNavButton({
   return (
     <button
       aria-label={label}
-      className="flex h-7 w-7 items-center justify-center rounded-md text-sm font-semibold text-slate-400 hover:bg-slate-100 hover:text-slate-900"
+      className="flex h-7 w-7 items-center justify-center rounded-md text-sm font-semibold text-[#8a8985] hover:bg-[#f7f6f3] hover:text-[#191919]"
       onClick={onClick}
       type="button"
     >

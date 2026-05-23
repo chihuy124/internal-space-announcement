@@ -101,7 +101,7 @@ export function SearchBar({
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <Input
-            className="border-slate-200/80 bg-white/90 pl-9 shadow-none"
+            className="border-[#d9d9d6] bg-[#fbfaf8] pl-9 shadow-none"
             onChange={(event) => setValue(event.target.value)}
             placeholder="Tìm ticket, tên ticket, người thực hiện"
             value={value}
@@ -118,7 +118,7 @@ export function SearchBar({
             <X className="h-4 w-4" />
           </Button>
         ) : null}
-        <Button className="shrink-0 bg-white/90" type="submit" variant="outline">
+        <Button className="shrink-0 bg-white" type="submit" variant="outline">
           Tìm
         </Button>
       </div>

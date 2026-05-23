@@ -120,20 +120,20 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <main className="min-h-dvh text-slate-950">
-      <section className="border-b border-white/70 bg-white/75 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8">
+    <main className="min-h-dvh bg-[#fbfaf8] text-[#191919]">
+      <section className="bg-[#101628] text-white">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50/80 px-3 py-1 text-sm font-medium text-sky-800 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-md border border-white/15 bg-white/10 px-3 py-1 text-sm font-medium text-white">
                 <Rocket className="h-4 w-4" />
                 Oroca internal release space
               </div>
               <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
+                <h1 className="text-3xl font-semibold tracking-normal text-white sm:text-5xl">
                   Internal Space Announcement
                 </h1>
-                <p className="max-w-2xl text-base leading-7 text-slate-600">
+                <p className="max-w-2xl text-base leading-7 text-white/72">
                   Quản lý các feature đã deploy của website chính, kèm ticket,
                   người thực hiện, ngày release và user guide cho đội nội bộ.
                 </p>
@@ -145,37 +145,37 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
-            <Card className="border-white/80 bg-white/85 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+            <Card className="border-[#efe3aa] bg-[#fff4ba] text-[#37352f] shadow-[0_24px_48px_-20px_rgba(15,15,15,0.38)]">
               <CardContent className="flex items-center gap-3 p-4">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-50 text-sky-700">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/70 text-[#8a5a00]">
                   <ClipboardList className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-sm text-slate-500">Tổng feature</p>
+                  <p className="text-sm text-[#6b5f32]">Tổng feature</p>
                   <p className="text-xl font-semibold">{total}</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-white/80 bg-white/85 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+            <Card className="border-[#cdebdc] bg-[#e5f8ed] text-[#173f2a] shadow-[0_24px_48px_-20px_rgba(15,15,15,0.32)]">
               <CardContent className="flex items-center gap-3 p-4">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/70 text-[#0f7b4c]">
                   <Database className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-sm text-slate-500">Database</p>
+                  <p className="text-sm text-[#4d705d]">Database</p>
                   <p className="text-xl font-semibold">
                     {dbReady ? "PostgreSQL" : "Chưa kết nối"}
                   </p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-white/80 bg-white/85 shadow-[0_16px_40px_rgba(15,23,42,0.08)] backdrop-blur">
+            <Card className="border-[#ded8fb] bg-[#f0ecff] text-[#2f1c68] shadow-[0_24px_48px_-20px_rgba(15,15,15,0.32)]">
               <CardContent className="flex items-center gap-3 p-4">
-                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-700">
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/70 text-[#6d28d9]">
                   <Rocket className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-sm text-slate-500">Mỗi trang</p>
+                  <p className="text-sm text-[#6d5ca4]">Mỗi trang</p>
                   <p className="text-xl font-semibold">{PAGE_SIZE} thẻ</p>
                 </div>
               </CardContent>
@@ -185,7 +185,7 @@ export default async function Home({ searchParams }: { searchParams: SearchParam
       </section>
 
       <section className="mx-auto flex min-h-[calc(100dvh-22rem)] w-full max-w-7xl flex-col gap-6 px-4 py-7 sm:px-6 lg:px-8">
-        <div className="rounded-xl border border-white/80 bg-white/80 p-3 shadow-[0_12px_35px_rgba(15,23,42,0.07)] backdrop-blur">
+        <div className="rounded-xl border border-[#e5e2dc] bg-white p-3 shadow-[0_4px_12px_rgba(15,15,15,0.06)]">
           <SearchBar
             defaultReleaseFrom={releaseFrom}
             defaultReleaseTo={releaseTo}

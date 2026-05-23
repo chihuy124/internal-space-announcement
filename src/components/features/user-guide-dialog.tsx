@@ -26,7 +26,7 @@ export function UserGuideDialog({
     <Dialog>
       <DialogTrigger asChild>
         <Button
-          className="w-full border border-sky-700 bg-sky-700 px-2 text-white hover:bg-sky-800"
+          className="w-full border border-[#7c3aed] bg-[#7c3aed] px-2 text-white hover:bg-[#6d28d9]"
           size="sm"
         >
           <BookOpen className="h-4 w-4" />
